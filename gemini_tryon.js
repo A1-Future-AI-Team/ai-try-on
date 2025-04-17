@@ -3,7 +3,7 @@ import sharp from 'sharp';
 
 export class GeminiTryOn {
     constructor() {
-        const apiKey = "AIzaSyBo00GRHkn3OZrp8ESCGgr0rYhRUcIw0ro";
+        const apiKey = process.env.GOOGLE_API_KEY;
         if (!apiKey) {
             throw new Error("GOOGLE_API_KEY environment variable is not set. Please set it with your Gemini API key.");
         }
