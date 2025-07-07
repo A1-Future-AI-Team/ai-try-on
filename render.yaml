@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: virtual-tryon
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GOOGLE_API_KEY
+        sync: false
+    plan: free 
