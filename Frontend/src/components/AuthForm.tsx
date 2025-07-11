@@ -6,9 +6,11 @@ interface AuthFormProps {
   mode: 'login' | 'register'
   onModeChange: (mode: 'login' | 'register') => void
   onBack: () => void
+  onSuccess?: () => void
+  registrationSuccess?: boolean
 }
 
-export function AuthForm({ mode, onModeChange, onBack }: AuthFormProps) {
+export function AuthForm({ mode, onModeChange, onBack, onSuccess, registrationSuccess }: AuthFormProps) {
   const { signIn, signUp } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,11 +26,13 @@ export function AuthForm({ mode, onModeChange, onBack }: AuthFormProps) {
 
     try {
       if (mode === 'login') {
-        const { error } = await signIn(email, password)
-        if (error) setError(error.message)
+        const { error, user } = await signIn(email, password)
+        if (error) setError(error)
+        else if (user && onSuccess) onSuccess()
       } else {
         const { error } = await signUp(email, password, name)
-        if (error) setError(error.message)
+        if (error) setError(error)
+        else if (onSuccess) onSuccess()
       }
     } catch (err) {
       setError('An error occurred. Please try again.')
@@ -50,6 +54,12 @@ export function AuthForm({ mode, onModeChange, onBack }: AuthFormProps) {
           {mode === 'login' ? 'Welcome Back' : 'Create Account'}
         </h2>
       </div>
+
+      {registrationSuccess && mode === 'login' && (
+        <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-green-400 text-sm mb-4">
+          Registration successful! Please log in.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'register' && (

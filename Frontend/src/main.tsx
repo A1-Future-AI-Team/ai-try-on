@@ -1,7 +1,8 @@
-import { StrictMode } from 'react'
+import React, { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { AuthProvider } from './hooks/AuthContext'
 
 // Custom cursor component
 function CustomCursor() {
@@ -74,6 +75,8 @@ document.addEventListener('DOMContentLoaded', CustomCursor)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>
 )

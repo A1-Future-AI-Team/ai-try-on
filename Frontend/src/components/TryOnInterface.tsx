@@ -1,7 +1,9 @@
+// Add this at the top of the file for Vite env typing
+/// <reference types="vite/client" />
 import React, { useState } from 'react'
 import { Sparkles, Download, Loader2 } from 'lucide-react'
 import { ImageUpload } from './ImageUpload'
-import { supabase } from '../lib/supabase'
+// import { supabase } from '../lib/supabase' // REMOVE THIS LINE
 import { useAuth } from '../hooks/useAuth'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -14,20 +16,6 @@ export function TryOnInterface() {
   const [resultImage, setResultImage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Upload a file to Supabase Storage and return its public URL
-  const uploadImageToSupabase = async (file: File | Blob, path: string) => {
-    // Make sure the bucket name matches exactly 'try-on-images'
-    const bucketName = 'try-on-images';
-    const { error } = await supabase.storage
-      .from(bucketName)
-      .upload(path, file)
-    if (error) throw error
-    const { data } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(path)
-    return data.publicUrl
-  }
 
   // Helper to get file extension
   const getFileExtension = (file: File) => {
@@ -48,6 +36,7 @@ export function TryOnInterface() {
       const formData = new FormData()
       formData.append('personImage', personImage)
       formData.append('garmentImage', clothingImage)
+      formData.append('userId', user.id) // Send userId to backend
 
       const response = await fetch(`${BACKEND_API_URL}/api/try-on`, {
         method: 'POST',
@@ -67,47 +56,9 @@ export function TryOnInterface() {
       const resultImageUrl = `${BACKEND_API_URL}/uploads/${result.resultImage}`
       setResultImage(resultImageUrl)
 
-      // 3. Upload original images to Supabase Storage (with extension)
-      const personImageExt = getFileExtension(personImage);
-      const clothingImageExt = getFileExtension(clothingImage);
-      const resultImageExt = 'png'; // result is always png
-      const personImageId = uuidv4()
-      const clothingImageId = uuidv4()
-      const resultImageId = uuidv4()
-      const personImageUrl = await uploadImageToSupabase(
-        personImage,
-        `${user.id}/person/${personImageId}.${personImageExt}`
-      )
-      const clothingImageUrl = await uploadImageToSupabase(
-        clothingImage,
-        `${user.id}/clothing/${clothingImageId}.${clothingImageExt}`
-      )
-
-      // 4. Fetch the result image as a Blob and upload to Supabase Storage
-      const resultImageResponse = await fetch(resultImageUrl)
-      const resultImageBlob = await resultImageResponse.blob()
-      const supabaseResultPath = `${user.id}/result/${resultImageId}.${resultImageExt}`;
-      const { data: resultUploadData, error: resultUploadError } = await supabase.storage
-        .from('try-on-images')
-        .upload(supabaseResultPath, resultImageBlob)
-      if (resultUploadError) throw resultUploadError
-      const { data: { publicUrl: resultImageSupabaseUrl } } = supabase.storage
-        .from('try-on-images')
-        .getPublicUrl(supabaseResultPath)
-
-      // 5. Store all URLs in Supabase DB for history
-      const expiresAt = new Date()
-      expiresAt.setHours(expiresAt.getHours() + 24)
-      const { error: dbError } = await supabase
-        .from('try_on_results')
-        .insert({
-          user_id: user.id,
-          person_image_url: personImageUrl,
-          clothing_image_url: clothingImageUrl,
-          result_image_url: resultImageSupabaseUrl,
-          expires_at: expiresAt.toISOString()
-        })
-      if (dbError) throw dbError
+      // 3. (REMOVED) Upload original images to Supabase Storage
+      // 4. (REMOVED) Upload result image to Supabase Storage
+      // 5. (REMOVED) Store all URLs in Supabase DB for history
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process images')
     } finally {
@@ -193,6 +144,7 @@ export function TryOnInterface() {
             <button
               onClick={downloadResult}
               className="absolute top-4 right-4 bg-gray-900/80 hover:bg-gray-800 text-white rounded-full p-2 transition-colors"
+              title="Download result image"
             >
               <Download className="w-5 h-5" />
             </button>

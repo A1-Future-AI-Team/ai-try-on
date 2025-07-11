@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { History, Download, Trash2, Calendar, Clock } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
 interface TryOnResult {
@@ -10,9 +9,16 @@ interface TryOnResult {
   result_image_url: string
   created_at: string
   expires_at: string
+  person_image_signed_url?: string
+  clothing_image_signed_url?: string
+  result_image_signed_url?: string
 }
 
-export function HistoryPage() {
+interface HistoryPageProps {
+  onNavigateHome?: () => void
+}
+
+export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
   const { user } = useAuth()
   const [results, setResults] = useState<TryOnResult[]>([])
   const [loading, setLoading] = useState(true)
@@ -25,44 +31,56 @@ export function HistoryPage() {
   }, [user])
 
   const loadHistory = async () => {
+    if (!user) return;
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('try_on_results')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setResults(data || [])
+      setError('')
+      const response = await fetch(`http://localhost:8000/api/try-on/history/${user.id}`)
+      const result = await response.json()
+      if (!result.success) throw new Error(result.error || 'Failed to load history')
+      setResults(result.results)
     } catch (err) {
-      setError('Failed to load history')
       console.error('Error loading history:', err)
+      setError('Failed to load history')
     } finally {
       setLoading(false)
     }
   }
 
   const deleteResult = async (id: string) => {
+    if (!user) return;
     try {
-      const { error } = await supabase
-        .from('try_on_results')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      const response = await fetch(`http://localhost:8000/api/try-on/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      })
+      const result = await response.json()
+      if (!result.success) throw new Error(result.error || 'Failed to delete result')
       setResults(results.filter(result => result.id !== id))
     } catch (err) {
       console.error('Error deleting result:', err)
     }
   }
 
-  const downloadResult = (resultImageUrl: string) => {
-    const link = document.createElement('a')
-    link.href = resultImageUrl
-    link.download = `tryon-result-${Date.now()}.jpg`
-    link.click()
-  }
+  const downloadResult = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      // Try to get the file extension from the url, fallback to .png
+      const ext = url.split('.').pop()?.split('?')[0] || 'png';
+      const filename = `tryon-result-${Date.now()}.${ext}`;
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (err) {
+      console.error('Failed to download image:', err);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -105,7 +123,7 @@ export function HistoryPage() {
             Your virtual try-on results will appear here once you generate some.
           </p>
           <button
-            onClick={() => window.location.href = '/home'}
+            onClick={onNavigateHome}
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200"
           >
             Create Your First Try-On
@@ -152,7 +170,7 @@ export function HistoryPage() {
                     className="w-full h-32 object-contain rounded-lg bg-black"
                   />
                 </div>
-                
+
                 <div className="text-center">
                   <h4 className="text-sm font-medium text-gray-400 mb-2">Clothing Item</h4>
                   <img
@@ -161,7 +179,7 @@ export function HistoryPage() {
                     className="w-full h-32 object-contain rounded-lg bg-black"
                   />
                 </div>
-                
+
                 <div className="text-center">
                   <h4 className="text-sm font-medium text-gray-400 mb-2">Result</h4>
                   <img
