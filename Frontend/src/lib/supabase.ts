@@ -1,4 +1,4 @@
-// Supabase integration is now disabled. Using MySQL backend API instead.
+// MongoDB backend integration - replacing SQL workbench
 // import { createClient } from '@supabase/supabase-js'
 
 // const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -26,4 +26,59 @@ export interface TryOnResult {
   result_image_url: string
   created_at: string
   expires_at: string
+}
+
+// MongoDB backend API configuration
+export const MONGODB_API_URL = (import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'
+
+// MongoDB API response types
+export interface MongoDBUser {
+  _id: string
+  username: string
+  email: string
+  role: 'user' | 'admin'
+  profileImage?: string
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MongoDBImage {
+  _id: string
+  userId: string
+  filename: string
+  originalName: string
+  url: string
+  category: 'model' | 'dress' | 'result'
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MongoDBTryOnSession {
+  _id: string
+  userId: string
+  sessionId: string
+  modelImageId: string
+  dressImageId: string
+  resultImageId?: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  processingStartedAt?: string
+  processingCompletedAt?: string
+  errorMessage?: string
+  metadata: {
+    modelImageUrl: string
+    dressImageUrl: string
+    resultImageUrl?: string
+    processingTime?: number
+  }
+  createdAt: string
+  updatedAt: string
+}
+
+export interface MongoDBApiResponse<T = any> {
+  status: 'success' | 'error'
+  message: string
+  data?: T
+  timestamp: string
 }

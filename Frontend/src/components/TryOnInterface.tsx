@@ -7,15 +7,17 @@ import { ImageUpload } from './ImageUpload'
 import { useAuth } from '../hooks/useAuth'
 import { v4 as uuidv4 } from 'uuid'
 
-const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:8000'
+const BACKEND_API_URL = (import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'
 
 export function TryOnInterface() {
   const { user } = useAuth()
   const [personImage, setPersonImage] = useState<File | null>(null)
   const [clothingImage, setClothingImage] = useState<File | null>(null)
   const [resultImage, setResultImage] = useState<string | null>(null)
+  const [resultCreatedAt, setResultCreatedAt] = useState<Date | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // Helper to get file extension
   const getFileExtension = (file: File) => {
@@ -30,35 +32,116 @@ export function TryOnInterface() {
 
     setLoading(true)
     setError(null)
+    setResultImage(null) // Clear previous result
+    setResultCreatedAt(null) // Clear previous expiration
+    setSuccessMsg(null) // Clear previous success message
 
     try {
-      // 1. Send images to backend for Gemini processing
-      const formData = new FormData()
-      formData.append('personImage', personImage)
-      formData.append('garmentImage', clothingImage)
-      formData.append('userId', user.id) // Send userId to backend
+      const token = localStorage.getItem('token')
+      if (!token) {
+        throw new Error('Authentication token not found')
+      }
 
-      const response = await fetch(`${BACKEND_API_URL}/api/try-on`, {
+      // 1. Upload person image
+      const personFormData = new FormData()
+      personFormData.append('image', personImage)
+      personFormData.append('category', 'model')
+
+      const personResponse = await fetch(`${BACKEND_API_URL}/api/upload`, {
         method: 'POST',
-        body: formData
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: personFormData
       })
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`)
+      if (!personResponse.ok) {
+        throw new Error('Failed to upload person image')
       }
 
-      const result = await response.json()
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to generate try-on result')
+      const personData = await personResponse.json()
+      if (personData.status !== 'success') {
+        throw new Error(personData.message || 'Failed to upload person image')
       }
 
-      // 2. Display the result image
-      const resultImageUrl = `${BACKEND_API_URL}/uploads/${result.resultImage}`
-      setResultImage(resultImageUrl)
+      // 2. Upload clothing image
+      const clothingFormData = new FormData()
+      clothingFormData.append('image', clothingImage)
+      clothingFormData.append('category', 'dress')
 
-      // 3. (REMOVED) Upload original images to Supabase Storage
-      // 4. (REMOVED) Upload result image to Supabase Storage
-      // 5. (REMOVED) Store all URLs in Supabase DB for history
+      const clothingResponse = await fetch(`${BACKEND_API_URL}/api/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: clothingFormData
+      })
+
+      if (!clothingResponse.ok) {
+        throw new Error('Failed to upload clothing image')
+      }
+
+      const clothingData = await clothingResponse.json()
+      if (clothingData.status !== 'success') {
+        throw new Error(clothingData.message || 'Failed to upload clothing image')
+      }
+
+      // 3. Create try-on session
+      const sessionResponse = await fetch(`${BACKEND_API_URL}/api/tryOn`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          modelImageId: personData.data.image._id,
+          dressImageId: clothingData.data.image._id
+        })
+      })
+
+      if (!sessionResponse.ok) {
+        throw new Error('Failed to create try-on session')
+      }
+
+      const sessionData = await sessionResponse.json()
+      if (sessionData.status !== 'success') {
+        throw new Error(sessionData.message || 'Failed to create try-on session')
+      }
+
+      // 4. Poll for completion
+      const sessionId = sessionData.data.session.sessionId
+      let attempts = 0
+      const maxAttempts = 30 // 30 seconds max
+
+      const pollForCompletion = async () => {
+        const pollResponse = await fetch(`${BACKEND_API_URL}/api/tryOn/${sessionId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        if (!pollResponse.ok) {
+          throw new Error('Failed to check session status')
+        }
+
+        const pollData = await pollResponse.json()
+        if (pollData.status !== 'success') {
+          throw new Error(pollData.message || 'Failed to check session status')
+        }
+
+        const session = pollData.data.session
+
+        if (session.status === 'completed' && session.metadata.resultImageUrl) {
+          setResultImage(`${BACKEND_API_URL}${session.metadata.resultImageUrl}`)
+          setResultCreatedAt(new Date())
+          setSuccessMsg('Image generated!')
+          return
+        } else if (session.status === 'failed') {
+          throw new Error(session.errorMessage || 'Try-on processing failed')
+        } else if (attempts >= maxAttempts) {
+          throw new Error('Try-on processing timed out')
+        }
+
+        attempts++
+        setTimeout(pollForCompletion, 1000) // Poll every second
+      }
+
+      await pollForCompletion()
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process images')
     } finally {
@@ -133,8 +216,10 @@ export function TryOnInterface() {
           <div className="text-center mb-6">
             <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Your Virtual Try-On Result</h3>
             <p className="text-gray-300">Looking great! Download or save to your history.</p>
+            {successMsg && (
+              <div className="mt-2 text-green-400 font-semibold animate-fade-in-up">{successMsg}</div>
+            )}
           </div>
-          
           <div className="relative mx-auto max-w-sm sm:max-w-md">
             <img
               src={resultImage}
@@ -149,6 +234,11 @@ export function TryOnInterface() {
               <Download className="w-5 h-5" />
             </button>
           </div>
+          {resultCreatedAt && (
+            <div className="mt-4 text-xs text-gray-400 text-center">
+              Expires: {new Date(resultCreatedAt.getTime() + 24 * 60 * 60 * 1000).toLocaleString()} (24 hours)
+            </div>
+          )}
         </div>
       )}
     </div>

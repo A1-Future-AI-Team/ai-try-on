@@ -3,15 +3,18 @@ import { History, Download, Trash2, Calendar, Clock } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 
 interface TryOnResult {
-  id: string
-  person_image_url: string
-  clothing_image_url: string
-  result_image_url: string
-  created_at: string
-  expires_at: string
-  person_image_signed_url?: string
-  clothing_image_signed_url?: string
-  result_image_signed_url?: string
+  _id: string
+  sessionId: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  metadata: {
+    modelImageUrl: string
+    dressImageUrl: string
+    resultImageUrl?: string
+    processingTime?: number
+  }
+  createdAt: string
+  processingCompletedAt?: string
+  errorMessage?: string
 }
 
 interface HistoryPageProps {
@@ -30,10 +33,18 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
       try {
         setLoading(true)
         setError('')
-        const response = await fetch(`http://localhost:8000/api/try-on/history/${user.id}`)
+        const token = localStorage.getItem('token')
+        if (!token) {
+          setError('Authentication token not found')
+          return
+        }
+
+        const response = await fetch(`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}/api/tryOn?status=completed`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
         const result = await response.json()
-        if (!result.success) throw new Error(result.error || 'Failed to load history')
-        setResults(result.results)
+        if (result.status !== 'success') throw new Error(result.message || 'Failed to load history')
+        setResults(result.data.sessions || [])
       } catch (err) {
         console.error('Error loading history:', err)
         setError('Failed to load history')
@@ -44,17 +55,19 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
     loadHistory();
   }, [user]);
 
-  const deleteResult = async (id: string) => {
+  const deleteResult = async (sessionId: string) => {
     if (!user) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/try-on/${id}`, {
+      const token = localStorage.getItem('token')
+      if (!token) return
+
+      const response = await fetch(`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}/api/tryOn/${sessionId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id })
+        headers: { 'Authorization': `Bearer ${token}` }
       })
       const result = await response.json()
-      if (!result.success) throw new Error(result.error || 'Failed to delete result')
-      setResults(results.filter(result => result.id !== id))
+      if (result.status !== 'success') throw new Error(result.message || 'Failed to delete result')
+      setResults(results.filter(result => result.sessionId !== sessionId))
     } catch (err) {
       console.error('Error deleting result:', err)
     }
@@ -130,26 +143,28 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
         <div className="grid gap-6">
           {results.map((result) => (
             <div
-              key={result.id}
+              key={result._id}
               className="bg-gray-900/50 backdrop-blur-lg border border-gray-800 rounded-2xl p-6"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <Calendar className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-300 text-sm">
-                    {formatDate(result.created_at)}
+                    {formatDate(result.createdAt)}
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
+                  {result.metadata.resultImageUrl && (
+                    <button
+                      onClick={() => downloadResult(`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}${result.metadata.resultImageUrl}`)}
+                      className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
+                      title="Download result"
+                    >
+                      <Download className="w-5 h-5" />
+                    </button>
+                  )}
                   <button
-                    onClick={() => downloadResult(result.result_image_url)}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-lg transition-colors"
-                    title="Download result"
-                  >
-                    <Download className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => deleteResult(result.id)}
+                    onClick={() => deleteResult(result.sessionId)}
                     className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                     title="Delete result"
                   >
@@ -162,7 +177,7 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
                 <div className="text-center">
                   <h4 className="text-sm font-medium text-gray-400 mb-2">Your Photo</h4>
                   <img
-                    src={result.person_image_url}
+                    src={`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}${result.metadata.modelImageUrl}`}
                     alt="Person"
                     className="w-full h-32 object-contain rounded-lg bg-black"
                   />
@@ -171,7 +186,7 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
                 <div className="text-center">
                   <h4 className="text-sm font-medium text-gray-400 mb-2">Clothing Item</h4>
                   <img
-                    src={result.clothing_image_url}
+                    src={`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}${result.metadata.dressImageUrl}`}
                     alt="Clothing"
                     className="w-full h-32 object-contain rounded-lg bg-black"
                   />
@@ -179,18 +194,30 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
 
                 <div className="text-center">
                   <h4 className="text-sm font-medium text-gray-400 mb-2">Result</h4>
-                  <img
-                    src={result.result_image_url}
-                    alt="Try-on result"
-                    className="w-full h-32 object-contain rounded-lg bg-black"
-                  />
+                  {result.metadata.resultImageUrl ? (
+                    <img
+                      src={`${(import.meta as any).env?.VITE_MONGODB_API_URL || 'http://localhost:3002'}${result.metadata.resultImageUrl}`}
+                      alt="Try-on result"
+                      className="w-full h-32 object-contain rounded-lg bg-black"
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-800 rounded-lg flex items-center justify-center">
+                      <span className="text-gray-500 text-sm">Processing...</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
                 <div className="flex items-center space-x-2">
                   <Clock className="w-4 h-4" />
-                  <span>Expires: {formatDate(result.expires_at)}</span>
+                  <span>Status: {result.status}</span>
+                  {result.metadata.processingTime && (
+                    <span>• {Math.round(result.metadata.processingTime / 1000)}s</span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 text-right">
+                  Expires: {new Date(new Date(result.createdAt).getTime() + 24 * 60 * 60 * 1000).toLocaleString()} (24 hours)
                 </div>
               </div>
             </div>
