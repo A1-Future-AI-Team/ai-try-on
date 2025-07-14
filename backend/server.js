@@ -202,6 +202,16 @@ app.delete('/api/try-on/:resultId', async (req, res) => {
     }
 });
 
+app.post('/api/validate-user', async (req, res) => {
+  const { id } = req.body;
+  try {
+    const [users] = await pool.execute('SELECT id FROM users WHERE id = ?', [id]);
+    res.json({ exists: users.length > 0 });
+  } catch (err) {
+    res.status(500).json({ exists: false, error: err.message });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'Virtual Try-On API is running' });

@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -24,6 +25,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   const BACKEND_API_URL = import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:8000';
+
+  // Validate user on app load
+  useEffect(() => {
+    const validateUser = async (user: User | null) => {
+      if (!user) return;
+      try {
+        const res = await fetch(`${BACKEND_API_URL}/api/validate-user`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: user.id })
+        });
+        const data = await res.json();
+        if (!data.exists) {
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+      } catch (err) {
+        // If validation fails, treat as not authenticated
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    };
+    validateUser(user);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {

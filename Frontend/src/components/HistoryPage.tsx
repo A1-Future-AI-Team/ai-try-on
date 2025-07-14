@@ -25,27 +25,24 @@ export function HistoryPage({ onNavigateHome }: HistoryPageProps) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (user) {
-      loadHistory()
-    }
-  }, [user])
-
-  const loadHistory = async () => {
     if (!user) return;
-    try {
-      setLoading(true)
-      setError('')
-      const response = await fetch(`http://localhost:8000/api/try-on/history/${user.id}`)
-      const result = await response.json()
-      if (!result.success) throw new Error(result.error || 'Failed to load history')
-      setResults(result.results)
-    } catch (err) {
-      console.error('Error loading history:', err)
-      setError('Failed to load history')
-    } finally {
-      setLoading(false)
-    }
-  }
+    const loadHistory = async () => {
+      try {
+        setLoading(true)
+        setError('')
+        const response = await fetch(`http://localhost:8000/api/try-on/history/${user.id}`)
+        const result = await response.json()
+        if (!result.success) throw new Error(result.error || 'Failed to load history')
+        setResults(result.results)
+      } catch (err) {
+        console.error('Error loading history:', err)
+        setError('Failed to load history')
+      } finally {
+        setLoading(false)
+      }
+    };
+    loadHistory();
+  }, [user]);
 
   const deleteResult = async (id: string) => {
     if (!user) return;
