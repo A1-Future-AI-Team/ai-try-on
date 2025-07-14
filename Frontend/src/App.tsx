@@ -83,9 +83,11 @@ function App() {
               setCurrentPage(page)
               console.log('Navigation: Switched to page', page)
             }}
-            onLogoClick={() => {
-              setCurrentPage('home')
-              console.log('Navigation: Logo clicked, switched to Home')
+            onLogoClick={async () => {
+              await signOut();
+              setShowAuth(false);
+              setCurrentPage('home');
+              console.log('Navigation: Logo clicked, navigated to LandingPage');
             }}
             onSignOut={handleSignOut}
           />

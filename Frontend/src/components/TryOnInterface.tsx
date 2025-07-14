@@ -159,88 +159,85 @@ export function TryOnInterface() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-4xl font-bold text-white mb-4">
-          Virtual Try-On Studio
-        </h1>
-        <p className="text-gray-300 text-base sm:text-lg px-4">
-          Upload your photo and clothing item to see how you look
-        </p>
-      </div>
-
-      <div className="max-w-6xl mx-auto">
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-        <ImageUpload
-          label="Upload Your Photo"
-          onImageSelect={setPersonImage}
-          selectedImage={personImage}
-        />
-        
-        <ImageUpload
-          label="Upload Clothing Item"
-          onImageSelect={setClothingImage}
-          selectedImage={clothingImage}
-        />
-      </div>
-      </div>
-
-      {error && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
-          {error}
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-purple-950/30 to-gray-950 p-4 flex items-center justify-center">
+      <div className="space-y-8 w-full max-w-4xl mx-auto">
+        <div className="text-center">
+          <h1 className="text-2xl sm:text-4xl font-bold text-white mb-4">
+            Virtual Try-On Studio
+          </h1>
+          <p className="text-gray-300 text-base sm:text-lg px-4">
+            Upload your photo and clothing item to see how you look
+          </p>
         </div>
-      )}
-
-      <div className="text-center">
-        <button
-          onClick={handleSubmit}
-          disabled={!personImage || !clothingImage || loading}
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center mx-auto space-x-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Processing...</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5" />
-              <span>Generate Try-On</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {resultImage && (
-        <div className="bg-gray-900/50 backdrop-blur-lg border border-gray-800 rounded-2xl p-6">
-          <div className="text-center mb-6">
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Your Virtual Try-On Result</h3>
-            <p className="text-gray-300">Looking great! Download or save to your history.</p>
-            {successMsg && (
-              <div className="mt-2 text-green-400 font-semibold animate-fade-in-up">{successMsg}</div>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <ImageUpload
+              label="Upload Your Photo"
+              onImageSelect={setPersonImage}
+              selectedImage={personImage}
+            />
+            <ImageUpload
+              label="Upload Clothing Item"
+              onImageSelect={setClothingImage}
+              selectedImage={clothingImage}
+            />
+          </div>
+        </div>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
+            {error}
+          </div>
+        )}
+        <div className="text-center">
+          <button
+            onClick={handleSubmit}
+            disabled={!personImage || !clothingImage || loading}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center mx-auto space-x-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5" />
+                <span>Generate Try-On</span>
+              </>
+            )}
+          </button>
+        </div>
+        {resultImage && (
+          <div className="bg-gray-900/50 glass border border-gray-800 rounded-2xl p-6 shadow-xl animate-fade-in-up">
+            <div className="text-center mb-6">
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">Your Virtual Try-On Result</h3>
+              <p className="text-gray-300">Looking great! Download or save to your history.</p>
+              {successMsg && (
+                <div className="mt-2 text-green-400 font-semibold animate-fade-in-up">{successMsg}</div>
+              )}
+            </div>
+            <div className="relative mx-auto max-w-sm sm:max-w-md">
+              <img
+                src={resultImage}
+                alt="Try-on result"
+                className="w-full rounded-lg shadow-lg"
+              />
+              <button
+                onClick={downloadResult}
+                className="absolute top-4 right-4 bg-gray-900/80 hover:bg-gray-800 text-white rounded-full p-2 transition-colors"
+                title="Download result image"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+            </div>
+            {resultCreatedAt && (
+              <div className="mt-4 text-xs text-gray-400 text-center">
+                Expires: {new Date(resultCreatedAt.getTime() + 24 * 60 * 60 * 1000).toLocaleString()} (24 hours)
+              </div>
             )}
           </div>
-          <div className="relative mx-auto max-w-sm sm:max-w-md">
-            <img
-              src={resultImage}
-              alt="Try-on result"
-              className="w-full rounded-lg shadow-lg"
-            />
-            <button
-              onClick={downloadResult}
-              className="absolute top-4 right-4 bg-gray-900/80 hover:bg-gray-800 text-white rounded-full p-2 transition-colors"
-              title="Download result image"
-            >
-              <Download className="w-5 h-5" />
-            </button>
-          </div>
-          {resultCreatedAt && (
-            <div className="mt-4 text-xs text-gray-400 text-center">
-              Expires: {new Date(resultCreatedAt.getTime() + 24 * 60 * 60 * 1000).toLocaleString()} (24 hours)
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
