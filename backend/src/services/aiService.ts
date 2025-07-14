@@ -246,7 +246,7 @@ export class AIService {
       // Handle relative URLs by converting to full localhost URL
       let fullUrl = url;
       if (url.startsWith('/')) {
-        fullUrl = `http://localhost:3001${url}`;
+        fullUrl = `http://localhost:8080${url}`;
       }
       
       const response = await axios.get(fullUrl, {
@@ -257,7 +257,7 @@ export class AIService {
       
       return Buffer.from(response.data);
     } catch (error) {
-      throw new Error(`Failed to download image from URL: ${url} (resolved to: ${url.startsWith('/') ? `http://localhost:3001${url}` : url})`);
+      throw new Error(`Failed to download image from URL: ${url} (resolved to: ${url.startsWith('/') ? `http://localhost:8080${url}` : url})`);
     }
   }
 

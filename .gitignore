@@ -152,3 +152,8 @@ backend/uploads/*
 # Lock files (keep package-lock.json but ignore yarn.lock if using npm)
 yarn.lock
 pnpm-lock.yaml 
+
+# Backend directory (now in separate repository)
+backend/ 
+
+mongo_env.txt

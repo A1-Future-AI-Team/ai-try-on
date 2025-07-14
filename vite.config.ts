@@ -7,14 +7,14 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
     headers: {
       'Cross-Origin-Embedder-Policy': 'cross-origin',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
       '/uploads': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
         headers: {
