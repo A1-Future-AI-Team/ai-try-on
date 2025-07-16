@@ -7,7 +7,7 @@ exports.deleteImage = exports.getImageById = exports.getUserImages = exports.upl
 const multer_1 = __importDefault(require("multer"));
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
-const Image_1 = require("@/models/Image");
+const Image_1 = require("../models/Image");
 const uuid_1 = require("uuid");
 const uploadsDir = path_1.default.join(process.cwd(), 'uploads');
 if (!fs_1.default.existsSync(uploadsDir)) {

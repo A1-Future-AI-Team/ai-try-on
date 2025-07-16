@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { User, IUser } from '@/models/User';
-import { AuthRequest } from '@/types';
+import { User, IUser } from '../models/User';
+import { AuthRequest } from '../types';
 import { body, validationResult } from 'express-validator';
 
 const createSendToken = (user: IUser, statusCode: number, res: Response) => {

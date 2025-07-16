@@ -4,10 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.serveResultImage = exports.downloadResultImage = exports.deleteTryOnSession = exports.updateTryOnSessionStatus = exports.getTryOnSessionById = exports.getTryOnSessions = exports.createTryOnSession = void 0;
-const TryOnSession_1 = require("@/models/TryOnSession");
-const Image_1 = require("@/models/Image");
+const TryOnSession_1 = require("../models/TryOnSession");
+const Image_1 = require("../models/Image");
 const uuid_1 = require("uuid");
-const aiService_1 = require("@/services/aiService");
+const aiService_1 = require("../services/aiService");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const createTryOnSession = async (req, res) => {

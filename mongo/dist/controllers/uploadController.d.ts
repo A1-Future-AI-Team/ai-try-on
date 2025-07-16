@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { AuthRequest } from '@/types';
+import { AuthRequest } from '../types';
 export declare const upload: import("express").RequestHandler<import("express-serve-static-core").ParamsDictionary, any, any, import("qs").ParsedQs, Record<string, any>>;
 export declare const uploadImageHandler: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const getUserImages: (req: AuthRequest, res: Response) => Promise<Response<any, Record<string, any>>>;

@@ -1,9 +1,9 @@
 import { Response } from 'express';
-import { AuthRequest } from '@/types';
-import { TryOnSession } from '@/models/TryOnSession';
-import { Image } from '@/models/Image';
+import { AuthRequest } from '../types';
+import { TryOnSession } from '../models/TryOnSession';
+import { Image } from '../models/Image';
 import { v4 as uuidv4 } from 'uuid';
-import { aiService } from '@/services/aiService';
+import { aiService } from '../services/aiService';
 import path from 'path';
 import fs from 'fs';
 

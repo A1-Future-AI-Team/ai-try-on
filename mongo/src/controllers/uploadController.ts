@@ -2,8 +2,8 @@ import { Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { AuthRequest } from '@/types';
-import { Image } from '@/models/Image';
+import { AuthRequest } from '../types';
+import { Image } from '../models/Image';
 import { v4 as uuidv4 } from 'uuid';
 
 // Ensure uploads directory exists

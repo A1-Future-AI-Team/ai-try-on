@@ -1,10 +1,10 @@
 import express from 'express';
-import { protect } from '@/middleware/auth';
-import { AuthRequest } from '@/types';
+import { protect } from '../middleware/auth';
+import { AuthRequest } from '../types';
 import { Response } from 'express';
-import { User } from '@/models/User';
-import { Image } from '@/models/Image';
-import { TryOnSession } from '@/models/TryOnSession';
+import { User } from '../models/User';
+import { Image } from '../models/Image';
+import { TryOnSession } from '../models/TryOnSession';
 
 const router = express.Router();
 

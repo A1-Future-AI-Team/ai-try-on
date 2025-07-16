@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.validateUpdateProfile = exports.validateLogin = exports.validateRegister = exports.updateProfile = exports.getProfile = exports.logout = exports.login = exports.register = void 0;
-const User_1 = require("@/models/User");
+const User_1 = require("../models/User");
 const express_validator_1 = require("express-validator");
 const createSendToken = (user, statusCode, res) => {
     const token = user.generateJWT();

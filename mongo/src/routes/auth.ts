@@ -8,8 +8,8 @@ import {
   validateRegister,
   validateLogin,
   validateUpdateProfile,
-} from '@/controllers/authController';
-import { protect } from '@/middleware/auth';
+} from '../controllers/authController';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 

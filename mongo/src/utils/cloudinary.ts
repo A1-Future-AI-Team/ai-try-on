@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryResponse } from '@/types';
+import { CloudinaryResponse } from '../types';
 
 // Configure Cloudinary
 cloudinary.config({

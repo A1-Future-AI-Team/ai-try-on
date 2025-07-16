@@ -7,8 +7,8 @@ import {
   deleteTryOnSession,
   downloadResultImage,
   serveResultImage,
-} from '@/controllers/tryOnController';
-import { protect } from '@/middleware/auth';
+} from '../controllers/tryOnController';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 

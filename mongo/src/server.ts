@@ -6,19 +6,19 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
 import rateLimit from 'express-rate-limit';
-import { connectDatabase } from '@/config/database';
-import { errorHandler } from '@/middleware/errorHandler';
-import { notFound } from '@/middleware/notFound';
+import { connectDatabase } from './config/database';
+import { errorHandler } from './middleware/errorHandler';
+import { notFound } from './middleware/notFound';
 import cron from 'node-cron';
-import { TryOnSession } from '@/models/TryOnSession';
-import { Image } from '@/models/Image';
+import { TryOnSession } from './models/TryOnSession';
+import { Image } from './models/Image';
 import fs from 'fs';
 
 // Routes
-import authRoutes from '@/routes/auth';
-import userRoutes from '@/routes/user';
-import uploadRoutes from '@/routes/upload';
-import tryOnRoutes from '@/routes/tryOn';
+import authRoutes from './routes/auth';
+import userRoutes from './routes/user';
+import uploadRoutes from './routes/upload';
+import tryOnRoutes from './routes/tryOn';
 
 // Load environment variables
 dotenv.config();

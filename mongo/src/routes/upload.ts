@@ -5,8 +5,8 @@ import {
   getUserImages,
   getImageById,
   deleteImage,
-} from '@/controllers/uploadController';
-import { protect } from '@/middleware/auth';
+} from '../controllers/uploadController';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
