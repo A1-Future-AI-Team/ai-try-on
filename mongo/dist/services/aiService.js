@@ -172,7 +172,8 @@ class AIService {
         try {
             let fullUrl = url;
             if (url.startsWith('/')) {
-                fullUrl = `http://localhost:8080${url}`;
+                const backendPort = process.env.PORT || 3002;
+                fullUrl = `http://localhost:${backendPort}${url}`;
             }
             const response = await axios_1.default.get(fullUrl, {
                 responseType: 'arraybuffer',
@@ -182,7 +183,7 @@ class AIService {
             return Buffer.from(response.data);
         }
         catch (error) {
-            throw new Error(`Failed to download image from URL: ${url} (resolved to: ${url.startsWith('/') ? `http://localhost:8080${url}` : url})`);
+            throw new Error(`Failed to download image from URL: ${url} (resolved to: ${url.startsWith('/') ? `http://localhost:${process.env.PORT || 3002}${url}` : url})`);
         }
     }
     getImageMimeType(buffer) {

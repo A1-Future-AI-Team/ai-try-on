@@ -14,6 +14,10 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const database_1 = require("@/config/database");
 const errorHandler_1 = require("@/middleware/errorHandler");
 const notFound_1 = require("@/middleware/notFound");
+const node_cron_1 = __importDefault(require("node-cron"));
+const TryOnSession_1 = require("@/models/TryOnSession");
+const Image_1 = require("@/models/Image");
+const fs_1 = __importDefault(require("fs"));
 const auth_1 = __importDefault(require("@/routes/auth"));
 const user_1 = __importDefault(require("@/routes/user"));
 const upload_1 = __importDefault(require("@/routes/upload"));
@@ -67,6 +71,35 @@ app.use('/api/upload', upload_1.default);
 app.use('/api/tryOn', tryOn_1.default);
 app.use(notFound_1.notFound);
 app.use(errorHandler_1.errorHandler);
+node_cron_1.default.schedule('0 * * * *', async () => {
+    try {
+        const now = new Date();
+        const expiredSessions = await TryOnSession_1.TryOnSession.find({
+            createdAt: { $lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) }
+        });
+        for (const session of expiredSessions) {
+            if (session.resultImageId) {
+                const image = await Image_1.Image.findById(session.resultImageId);
+                if (image) {
+                    if (image.url && image.url.startsWith('/uploads/')) {
+                        const filePath = `${process.cwd()}${image.url}`;
+                        if (fs_1.default.existsSync(filePath)) {
+                            fs_1.default.unlinkSync(filePath);
+                        }
+                    }
+                    await image.deleteOne();
+                }
+            }
+            await session.deleteOne();
+        }
+        if (expiredSessions.length > 0) {
+            console.log(`[CRON] Deleted ${expiredSessions.length} expired try-on sessions and their images.`);
+        }
+    }
+    catch (err) {
+        console.error('[CRON] Error deleting expired sessions/images:', err);
+    }
+});
 const startServer = async () => {
     try {
         await (0, database_1.connectDatabase)();
