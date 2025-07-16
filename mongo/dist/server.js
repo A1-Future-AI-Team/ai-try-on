@@ -27,7 +27,7 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3002;
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'),
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'),
     message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
@@ -39,6 +39,7 @@ const allowedOrigins = [
     'http://127.0.0.1:5173',
     'http://127.0.0.1:8080',
     'http://127.0.0.1:3000',
+    'https://ai-try-on-mu.vercel.app',
     process.env.FRONTEND_URL
 ].filter(Boolean);
 app.use((0, helmet_1.default)());
