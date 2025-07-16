@@ -15,7 +15,6 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           <span className="text-2xl font-bold text-white">Virtual Try-On</span>
         </div>
         <div className="flex items-center space-x-4">
-          <button className="text-white font-semibold hover:underline">Sign In</button>
           <button onClick={onGetStarted} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-6 py-2 rounded-xl text-lg transition-all duration-200 transform hover:scale-105">Get Started</button>
         </div>
       </nav>
@@ -28,10 +27,6 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
             <button onClick={onGetStarted} className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2 shadow-lg">
               <Sparkles className="w-6 h-6" />
               <span>Start Your Try-On</span>
-            </button>
-            <button className="bg-gray-900 text-white font-semibold px-8 py-4 rounded-xl text-lg border border-gray-700 hover:bg-gray-800 transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg">
-              <ArrowRight className="w-6 h-6" />
-              <span>Get Started Free</span>
             </button>
           </div>
         </section>
